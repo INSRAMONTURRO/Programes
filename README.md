@@ -37,3 +37,4 @@ Un convertidor de documents PDF a "flipbooks" interactius en format HTML5, amb d
 * **[Llegir el Manual d'Ús](./PDF_to_HTML5/MANUAL.md)**
 * Descarregar per a:
   * **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Pdf-to-html5-v1.0/pdf_to_flipbook_HTML5)**
+  * **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Pdf-to-html5-v1.0/pdf_to_flipbook_HTML5.exe)**
