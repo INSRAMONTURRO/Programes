@@ -12,10 +12,10 @@ A continuació es detallen els programes inclosos en aquest projecte. Per a cada
 
 Un programa amb interfície gràfica per copiar i reanomenar fitxers de forma massiva.
 
-*   **[Llegir el Manual d'Ús](./ReanomenaFitxers/MANUAL.md)**
-*   Descarregar per a:
-    *   **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Reanomena-v1.0/reanomena.exe)**
-    *   **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Reanomena-v1.0/reanomena)**
+* **[Llegir el Manual d'Ús](./ReanomenaFitxers/MANUAL.md)**
+* Descarregar per a:
+  * **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Reanomena-v1.0/reanomena.exe)**
+  * **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Reanomena-v1.0/reanomena)**
 
 ---
 
@@ -23,10 +23,10 @@ Un programa amb interfície gràfica per copiar i reanomenar fitxers de forma ma
 
 Una eina gràfica per afegir capçaleres personalitzades (imatge i text) a totes les pàgines d'un document PDF.
 
-*   **[Llegir el Manual d'Ús](./Editor_PDF_cap/MANUAL.md)**
-*   Descarregar per a:
-    *   **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Editor-pdf-v1.0/EditaPdf2.exe)**
-    *   **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Editor-pdf-v1.0/EditaPdf2)**
+* **[Llegir el Manual d'Ús](./Editor_PDF_cap/MANUAL.md)**
+* Descarregar per a:
+  * **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Editor-pdf-v1.0/EditaPdf2.exe)**
+  * **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Editor-pdf-v1.0/EditaPdf2)**
 
 ---
 
@@ -34,7 +34,6 @@ Una eina gràfica per afegir capçaleres personalitzades (imatge i text) a totes
 
 Un convertidor de documents PDF a "flipbooks" interactius en format HTML5, amb dos estils de visualització.
 
-*   **[Llegir el Manual d'Ús](./PDF_to_HTML5/MANUAL.md)**
-*   Descarregar per a:
-    *   **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Pdf-to-html5-v1.0/pdf_to_flipbook_HTML5)**
-
+* **[Llegir el Manual d'Ús](./PDF_to_HTML5/MANUAL.md)**
+* Descarregar per a:
+  * **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Pdf-to-html5-v1.0/pdf_to_flipbook_HTML5)**
