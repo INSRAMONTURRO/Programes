@@ -13,7 +13,7 @@ A continuació es detallen els programes inclosos en aquest projecte. Per a cada
 Un programa amb interfície gràfica per copiar i reanomenar fitxers de forma massiva.
 
 *   **[Llegir el Manual d'Ús](./ReanomenaFitxers/MANUAL.md)**
-*   **[Descarregar el Programa](https://github.com/INSRAMONTURRO/Programes/releases/tag/reanomena-v1.0)**
+*   **[Descarregar el Programa](https://github.com/INSRAMONTURRO/Programes/releases/tag/Reanomena-v1.0)**
 
 ---
 
@@ -22,7 +22,7 @@ Un programa amb interfície gràfica per copiar i reanomenar fitxers de forma ma
 Una eina gràfica per afegir capçaleres personalitzades (imatge i text) a totes les pàgines d'un document PDF.
 
 *   **[Llegir el Manual d'Ús](./Editor_PDF_cap/MANUAL.md)**
-*   **[Descarregar el Programa](https://github.com/INSRAMONTURRO/Programes/releases/tag/editor-pdf-v1.0)**
+*   **[Descarregar el Programa](https://github.com/INSRAMONTURRO/Programes/releases/tag/Editor-pdf-v1.0)**
 
 ---
 
@@ -31,5 +31,5 @@ Una eina gràfica per afegir capçaleres personalitzades (imatge i text) a totes
 Un convertidor de documents PDF a "flipbooks" interactius en format HTML5, amb dos estils de visualització.
 
 *   **[Llegir el Manual d'Ús](./PDF_to_HTML5/MANUAL.md)**
-*   **[Descarregar el Programa](https://github.com/INSRAMONTURRO/Programes/releases/tag/pdf-to-html5-v1.0)**
+*   **[Descarregar el Programa](https://github.com/INSRAMONTURRO/Programes/releases/tag/Pdf-to-html5-v1.0)**
 
