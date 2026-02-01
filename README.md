@@ -2,48 +2,49 @@
   <img src="https://insramonturro.github.io/professors/img/LogoINS_p.png" alt="Logo INS Ram de la Muntanya Turró" width="200"/>
 </p>
 
-# Col·lecció de Programes
 
-Aquest repositori conté una col·lecció de petits programes d'utilitat creats per a diverses tasques.
 
-## Programes Disponibles
 
-A continuació es detallen els programes inclosos en aquest projecte. Per a cada programa, trobaràs un enllaç al seu manual d'instruccions i un altre per descarregar els executables.
 
----
+# 📚 Conjunt de Programes Educatius
 
-### 1. ReanomenaFitxers
-
-Un programa amb interfície gràfica per copiar i reanomenar fitxers de forma massiva.
-
-* **[Llegir el Manual d'Ús](./ReanomenaFitxers/MANUAL.md)**
-* Descarregar per a:
-  * **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Reanomena-v1.0/reanomena.exe)**
-  * **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Reanomena-v1.0/reanomena)**
+Col·lecció de programes utilitaris desenvolupats per al centre educatiu **INS Ramon Turro** per facilitar tasques administratives i acadèmiques. Tots els executables són **autònoms** (no cal instal·lar Python ni cap dependència).
 
 ---
 
-### 2. Editor_PDF_cap
+## 🚀 Programes disponibles
 
-Una eina gràfica per afegir capçaleres personalitzades (imatge i text) a totes les pàgines d'un document PDF.
+| Programa                 | Descripció                                                                                        | Windows                                                                                                        | Linux                                                                                                      | Manual                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Baixa Faltes Alumnes** | Genera documents oficials de baixa per absència injustificada a partir de dades d'alumnes         | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/baixa-faltes-alumnes.exe) | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/baixa-faltes-alumnes) | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/baixa-faltes-alumnes_MANUAL.txt) |
+| **Editor PDF capçalera** | Edita capçaleres de documents PDF amb dades personalitzades (nom, curs, data...)                  | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/editor-pdf-cap.exe)       | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/editor-pdf-cap)       | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/editor-pdf-cap_MANUAL.txt)       |
+| **PDF to HTML5**         | Converteix documents PDF a flipbook interactiu HTML5 (ideal per publicar materials a la web)      | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/pdf-to-html5.exe)         | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/pdf-to-html5)         | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/pdf-to-html5_MANUAL.txt)         |
+| **Reanomena Fitxers**    | Renombra fitxers en bloc seguint patrons numèrics seqüencials (ex: foto_001.jpg, foto_002.jpg...) | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/reanomena-fitxers.exe)    | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/reanomena-fitxers)    | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/reanomena-fitxers_MANUAL.txt)    |
 
-* **[Llegir el Manual d'Ús](./Editor_PDF_cap/MANUAL.md)**
-* Descarregar per a:
-  * **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Editor-pdf-v1.0/EditaPdf2.exe)**
-  * **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Editor-pdf-v1.0/EditaPdf2)**
+---
+
+## 📥 Accés directe
+
+- [📦 Descarregar tots els executables (darrera versió)](https://github.com/insramonturro/Programes/releases/latest)
+- [📦 Veure totes les versions publicades](https://github.com/insramonturro/Programes/releases)
 
 ---
 
-### 3. PDF_to_HTML5
+## 🛠️ Com usar els executables
 
-Un convertidor de documents PDF a "flipbooks" interactius en format HTML5, amb dos estils de visualització.
+### Windows
 
-* **[Llegir el Manual d'Ús](./PDF_to_HTML5/MANUAL.md)**
-* Descarregar per a:
-  * **[Linux](https://github.com/INSRAMONTURRO/Programes/releases/download/Pdf-to-html5-v1.0/pdf_to_flipbook_HTML5)**
-  * **[Windows](https://github.com/INSRAMONTURRO/Programes/releases/download/Pdf-to-html5-v1.0/pdf_to_flipbook_HTML5.exe)**
+1. Descarrega l'executable `.exe` corresponent
+2. Executa'l amb doble clic o des d'una finestra de comandes (`cmd`)
+3. Consulta el manual inclòs per instruccions detallades
 
----
+### Linux (Kubuntu/Ubuntu)
+
+1. Descarrega l'executable sense extensió
+2. Dona permisos d'execució:
+   ```bash
+   chmod +x nom_del_programa
+
 ## Llicència
 
 **Autor:** Josep M Sardà

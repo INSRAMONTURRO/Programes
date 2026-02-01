@@ -1,10 +1,12 @@
-# Executables
-Editor_PDF_cap/Linux/EditaPdf2
-Editor_PDF_cap/windows/EditaPdf2.exe
-PDF_to_HTML5/Linux/pdf_to_flipbook_HTML5
-ReanomenaFitxers/Linux/reanomena
-ReanomenaFitxers/windows/reanomena.exe
 
-# System files
-.DS_Store
-Thumbs.db
+# Fitxers temporals/compilats
+__pycache__/
+*.pyc
+*.spec
+build/
+dist/
+*.egg-info/
+
+# Entorns virtuals
+venv/
+.env/
