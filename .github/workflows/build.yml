@@ -17,11 +17,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instal·la dependències
-        run: |
-          pip install pyinstaller weasyprint markdown
-          sudo apt-get update
-          sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
+      - name: Instal·la PyInstaller
+        run: pip install pyinstaller
 
       - name: Compila cada programa (Linux)
         run: |
@@ -65,7 +62,7 @@ jobs:
             # NETEJA: Elimina fitxers de compilacions anteriors
             rm -rf build dist *.spec __pycache__
 
-            # Compila amb nom explícit
+            # Compila amb nom explícit i opcions de neteja
             pyinstaller --onefile \
               --clean \
               --name "$nom_executable" \
@@ -75,117 +72,16 @@ jobs:
               --log-level=WARN \
               "$(basename "$fitxer_py")"
 
-            # Neteja fitxers temporals
+            # Neteja fitxers temporals després de compilar
             rm -rf build *.spec __pycache__
 
             cd ../..
 
-            # Converteix el manual a PDF
+            # Copia el manual (MANUAL.md o MANUAL_US.md)
             if [[ -f "${carpeta_programa}/MANUAL.md" ]]; then
-              echo "📄 Convertint MANUAL.md a PDF..."
-              python3 << 'PYTHON_SCRIPT'
-import markdown
-from weasyprint import HTML, CSS
-import sys
-
-md_file = "${carpeta_programa}/MANUAL.md"
-pdf_file = "dist_linux/${nom_executable}_MANUAL.pdf"
-
-with open(md_file, 'r', encoding='utf-8') as f:
-    md_content = f.read()
-
-html_content = markdown.markdown(md_content, extensions=['extra', 'codehilite'])
-
-html_template = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 2cm;
-            color: #333;
-        }}
-        h1, h2, h3 {{
-            color: #2c3e50;
-        }}
-        code {{
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-        }}
-        pre {{
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }}
-    </style>
-</head>
-<body>
-{html_content}
-</body>
-</html>
-"""
-
-HTML(string=html_template).write_pdf(pdf_file)
-print(f"✅ PDF creat: {pdf_file}")
-PYTHON_SCRIPT
+              cp "${carpeta_programa}/MANUAL.md" "dist_linux/${nom_executable}_MANUAL.txt"
             elif [[ -f "${carpeta_programa}/MANUAL_US.md" ]]; then
-              echo "📄 Convertint MANUAL_US.md a PDF..."
-              python3 << 'PYTHON_SCRIPT'
-import markdown
-from weasyprint import HTML, CSS
-
-md_file = "${carpeta_programa}/MANUAL_US.md"
-pdf_file = "dist_linux/${nom_executable}_MANUAL.pdf"
-
-with open(md_file, 'r', encoding='utf-8') as f:
-    md_content = f.read()
-
-html_content = markdown.markdown(md_content, extensions=['extra', 'codehilite'])
-
-html_template = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 2cm;
-            color: #333;
-        }}
-        h1, h2, h3 {{
-            color: #2c3e50;
-        }}
-        code {{
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-        }}
-        pre {{
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }}
-    </style>
-</head>
-<body>
-{html_content}
-</body>
-</html>
-"""
-
-HTML(string=html_template).write_pdf(pdf_file)
-print(f"✅ PDF creat: {pdf_file}")
-PYTHON_SCRIPT
+              cp "${carpeta_programa}/MANUAL_US.md" "dist_linux/${nom_executable}_MANUAL.txt"
             fi
 
             echo "✅ ${nom_executable} compilat"
@@ -210,10 +106,8 @@ PYTHON_SCRIPT
         with:
           python-version: '3.11'
 
-      - name: Instal·la dependències
-        run: |
-          pip install pyinstaller weasyprint markdown
-        shell: pwsh
+      - name: Instal·la PyInstaller
+        run: pip install pyinstaller
 
       - name: Compila cada programa (Windows)
         run: |
@@ -258,7 +152,7 @@ PYTHON_SCRIPT
             # NETEJA: Elimina fitxers de compilacions anteriors
             Remove-Item -Path "build", "dist", "*.spec", "__pycache__" -Recurse -Force -ErrorAction SilentlyContinue
 
-            # Compila amb nom explícit
+            # Compila amb nom explícit i opcions de neteja
             pyinstaller --onefile `
               --clean `
               --name $nom_executable `
@@ -268,7 +162,7 @@ PYTHON_SCRIPT
               --log-level=WARN `
               $fitxer_py.Name
 
-            # Neteja fitxers temporals
+            # Neteja fitxers temporals després de compilar
             Remove-Item -Path "build", "*.spec", "__pycache__" -Recurse -Force -ErrorAction SilentlyContinue
 
             Set-Location ..\..
