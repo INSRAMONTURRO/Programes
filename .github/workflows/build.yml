@@ -16,28 +16,23 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
-      - name: Instal·la Pandoc i LaTeX
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended texlive-latex-extra texlive-lang-european
-
+      
       - name: Instal·la PyInstaller
         run: pip install pyinstaller
-
+        
       - name: Compila cada programa (Linux)
         run: |
           mkdir -p dist_linux
-
+          
           # Processa cada carpeta de primer nivell
           for carpeta_programa in */; do
             carpeta_programa="${carpeta_programa%/}"  # Elimina la barra final
-
+            
             # Ignora carpetes del sistema
             case "$carpeta_programa" in
               .github|.git|assets|docs) continue ;;
             esac
-
+            
             # Detecta source/ o Source/
             if [[ -d "${carpeta_programa}/source" ]]; then
               source_dir="${carpeta_programa}/source"
@@ -47,46 +42,32 @@ jobs:
               echo "⚠️  Saltant '${carpeta_programa}': no conté 'source' ni 'Source'"
               continue
             fi
-
+            
             # Normalitza el nom de l'executable: minúscules + guions
             nom_executable=$(echo "$carpeta_programa" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
-
+            
             # Troba el primer fitxer .py al directori source
             fitxer_py=$(find "$source_dir" -maxdepth 1 -name "*.py" -type f | head -n1)
-
+            
             if [[ -z "$fitxer_py" ]]; then
               echo "⚠️  Saltant '${carpeta_programa}': cap fitxer .py a ${source_dir}"
               continue
             fi
-
+            
             echo "📦 ${carpeta_programa} → ${nom_executable}"
-
+            
             # Compila amb PyInstaller
             cd "$source_dir"
             pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_executable" --distpath "../../dist_linux" --log-level=WARN
             cd ../..
-
-            # Converteix el manual a PDF
+            
+            # Copia el manual (MANUAL.md o MANUAL_US.md)
             if [[ -f "${carpeta_programa}/MANUAL.md" ]]; then
-              echo "📄 Convertint MANUAL.md a PDF..."
-              pandoc "${carpeta_programa}/MANUAL.md" \
-                -o "dist_linux/${nom_executable}_MANUAL.pdf" \
-                --pdf-engine=pdflatex \
-                -V geometry:margin=2cm \
-                -V fontsize=11pt \
-                -V documentclass=article \
-                -V lang=ca
+              cp "${carpeta_programa}/MANUAL.md" "dist_linux/${nom_executable}_MANUAL.txt"
             elif [[ -f "${carpeta_programa}/MANUAL_US.md" ]]; then
-              echo "📄 Convertint MANUAL_US.md a PDF..."
-              pandoc "${carpeta_programa}/MANUAL_US.md" \
-                -o "dist_linux/${nom_executable}_MANUAL.pdf" \
-                --pdf-engine=pdflatex \
-                -V geometry:margin=2cm \
-                -V fontsize=11pt \
-                -V documentclass=article \
-                -V lang=en
+              cp "${carpeta_programa}/MANUAL_US.md" "dist_linux/${nom_executable}_MANUAL.txt"
             fi
-
+            
             echo "✅ ${nom_executable} compilat"
           done
         shell: bash
@@ -94,9 +75,7 @@ jobs:
       - name: Puja a Release (Linux)
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist_linux/*
-            !dist_linux/*.spec
+          files: dist_linux/*
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,35 +87,23 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
-      - name: Instal·la Pandoc i MiKTeX
-        run: |
-          choco install pandoc -y
-          choco install miktex -y
-        shell: pwsh
-
-      - name: Configura MiKTeX
-        run: |
-          $env:PATH += ";C:\Program Files\MiKTeX\miktex\bin\x64"
-          initexmf --set-config-value=[MPM]AutoInstall=1
-        shell: pwsh
-
+      
       - name: Instal·la PyInstaller
         run: pip install pyinstaller
-
+        
       - name: Compila cada programa (Windows)
         run: |
           New-Item -Path "dist_windows" -ItemType Directory -Force | Out-Null
-
+          
           # Processa cada carpeta de primer nivell
           Get-ChildItem -Directory | ForEach-Object {
             $carpeta_programa = $_.Name
-
+            
             # Ignora carpetes del sistema
             if ($carpeta_programa -in @(".github", ".git", "assets", "docs")) {
               return
             }
-
+            
             # Detecta source/ o Source/
             $source_dir = $null
             if (Test-Path "${carpeta_programa}/source") {
@@ -147,46 +114,32 @@ jobs:
               Write-Host "⚠️  Saltant '${carpeta_programa}': no conté 'source' ni 'Source'"
               return
             }
-
+            
             # Normalitza el nom de l'executable
             $nom_executable = $carpeta_programa.ToLower() -replace ' ', '-' -replace '_', '-'
-
+            
             # Troba el primer fitxer .py
             $fitxer_py = Get-ChildItem "${source_dir}/*.py" -File | Select-Object -First 1
-
+            
             if (-not $fitxer_py) {
               Write-Host "⚠️  Saltant '${carpeta_programa}': cap fitxer .py a ${source_dir}"
               return
             }
-
+            
             Write-Host "📦 ${carpeta_programa} → ${nom_executable}.exe"
-
+            
             # Compila amb PyInstaller
             Set-Location $source_dir
             pyinstaller --onefile $fitxer_py.Name --name $nom_executable --distpath "..\..\dist_windows" --log-level=WARN
             Set-Location ..\..
-
-            # Converteix el manual a PDF
+            
+            # Copia el manual
             if (Test-Path "${carpeta_programa}/MANUAL.md") {
-              Write-Host "📄 Convertint MANUAL.md a PDF..."
-              pandoc "${carpeta_programa}/MANUAL.md" `
-                -o "dist_windows/${nom_executable}_MANUAL.pdf" `
-                --pdf-engine=pdflatex `
-                -V geometry:margin=2cm `
-                -V fontsize=11pt `
-                -V documentclass=article `
-                -V lang=ca
+              Copy-Item "${carpeta_programa}/MANUAL.md" "dist_windows/${nom_executable}_MANUAL.txt"
             } elseif (Test-Path "${carpeta_programa}/MANUAL_US.md") {
-              Write-Host "📄 Convertint MANUAL_US.md a PDF..."
-              pandoc "${carpeta_programa}/MANUAL_US.md" `
-                -o "dist_windows/${nom_executable}_MANUAL.pdf" `
-                --pdf-engine=pdflatex `
-                -V geometry:margin=2cm `
-                -V fontsize=11pt `
-                -V documentclass=article `
-                -V lang=en
+              Copy-Item "${carpeta_programa}/MANUAL_US.md" "dist_windows/${nom_executable}_MANUAL.txt"
             }
-
+            
             Write-Host "✅ ${nom_executable}.exe compilat"
           }
         shell: pwsh
@@ -196,7 +149,7 @@ jobs:
         with:
           files: |
             dist_windows/*.exe
-            dist_windows/*_MANUAL.pdf
+            dist_windows/*_MANUAL.txt
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
