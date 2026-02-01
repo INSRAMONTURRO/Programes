@@ -1,10 +1,6 @@
 <p align="center">
-  <img src="https://insramonturro.github.io/professors/img/LogoINS_p.png" alt="Logo INS Ram de la Muntanya Turró" width="200"/>
+  <img src="https://INSRAMONTURRO.github.io/professors/img/LogoINS_p.png" alt="Logo INS Ram de la Muntanya Turró" width="200"/>
 </p>
-
-
-
-
 
 # 📚 Conjunt de Programes Educatius
 
@@ -16,17 +12,17 @@ Col·lecció de programes utilitaris desenvolupats per al centre educatiu **INS 
 
 | Programa                 | Descripció                                                                                        | Windows                                                                                                        | Linux                                                                                                      | Manual                                                                                                           |
 | ------------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **Baixa Faltes Alumnes** | Genera documents oficials de baixa per absència injustificada a partir de dades d'alumnes         | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/baixa-faltes-alumnes.exe) | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/baixa-faltes-alumnes) | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/baixa-faltes-alumnes_MANUAL.txt) |
-| **Editor PDF capçalera** | Edita capçaleres de documents PDF amb dades personalitzades (nom, curs, data...)                  | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/editor-pdf-cap.exe)       | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/editor-pdf-cap)       | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/editor-pdf-cap_MANUAL.txt)       |
-| **PDF to HTML5**         | Converteix documents PDF a flipbook interactiu HTML5 (ideal per publicar materials a la web)      | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/pdf-to-html5.exe)         | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/pdf-to-html5)         | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/pdf-to-html5_MANUAL.txt)         |
-| **Reanomena Fitxers**    | Renombra fitxers en bloc seguint patrons numèrics seqüencials (ex: foto_001.jpg, foto_002.jpg...) | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/reanomena-fitxers.exe)    | [⬇️ Descarregar](https://github.com/insramonturro/Programes/releases/latest/download/reanomena-fitxers)    | [📖 MANUAL](https://github.com/insramonturro/Programes/releases/latest/download/reanomena-fitxers_MANUAL.txt)    |
+| **Baixa Faltes Alumnes** | Genera documents oficials de baixa per absència injustificada a partir de dades d'alumnes         | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/baixa-faltes-alumnes.exe) | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/baixa-faltes-alumnes) | [📖 MANUAL](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/baixa-faltes-alumnes_MANUAL.pdf) |
+| **Editor PDF capçalera** | Edita capçaleres de documents PDF amb dades personalitzades (nom, curs, data...)                  | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/editor-pdf-cap.exe)       | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/editor-pdf-cap)       | [📖 MANUAL](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/editor-pdf-cap_MANUAL.pdf)       |
+| **PDF to HTML5**         | Converteix documents PDF a flipbook interactiu HTML5 (ideal per publicar materials a la web)      | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/pdf-to-html5.exe)         | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/pdf-to-html5)         | [📖 MANUAL](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/pdf-to-html5_MANUAL.pdf)         |
+| **Reanomena Fitxers**    | Renombra fitxers en bloc seguint patrons numèrics seqüencials (ex: foto_001.jpg, foto_002.jpg...) | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/reanomena-fitxers.exe)    | [⬇️ Descarregar](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/reanomena-fitxers)    | [📖 MANUAL](https://github.com/INSRAMONTURRO/Programes/releases/latest/download/reanomena-fitxers_MANUAL.pdf)    |
 
 ---
 
 ## 📥 Accés directe
 
-- [📦 Descarregar tots els executables (darrera versió)](https://github.com/insramonturro/Programes/releases/latest)
-- [📦 Veure totes les versions publicades](https://github.com/insramonturro/Programes/releases)
+- [📦 Descarregar tots els executables (darrera versió)](https://github.com/INSRAMONTURRO/Programes/releases/latest)
+- [📦 Veure totes les versions publicades](https://github.com/INSRAMONTURRO/Programes/releases)
 
 ---
 
@@ -41,9 +37,12 @@ Col·lecció de programes utilitaris desenvolupats per al centre educatiu **INS 
 ### Linux (Kubuntu/Ubuntu)
 
 1. Descarrega l'executable sense extensió
+
 2. Dona permisos d'execució:
+   
    ```bash
    chmod +x nom_del_programa
+   ```
 
 ## Llicència
 
