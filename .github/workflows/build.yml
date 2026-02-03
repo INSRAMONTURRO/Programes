@@ -1,84 +1,148 @@
-name: Compilació i Manuals
+name: Compilació multiplataforma
 
 on:
   push:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    permissions:
-      contents: write  # Crucial per poder crear la Release
-
+  build-linux:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Instal·la eines
-        run: pip install pyinstaller markdown
+      - name: Instal·la PyInstaller
+        run: pip install pyinstaller
 
-      # SECCIÓ LINUX
-      - name: Build Linux i HTML
-        if: runner.os == 'Linux'
+      - name: Compila cada programa (Linux)
         run: |
-          mkdir -p dist_final
+          mkdir -p dist_linux
 
-          # Creem l'script convertidor directament en un fitxer
-          echo "import markdown, sys" > convert.py
-          echo "with open(sys.argv[1], 'r', encoding='utf-8') as f: body = markdown.markdown(f.read(), extensions=['extra', 'tables'])" >> convert.py
-          echo "with open(sys.argv[2], 'w', encoding='utf-8') as f: f.write(f'<html><body>{body}</body></html>')" >> convert.py
+          # Processa cada carpeta de primer nivell
+          for carpeta_programa in */; do
+            carpeta_programa="${carpeta_programa%/}"  # Elimina la barra final
 
-          # Bucle simplificat
-          for d in */; do
-            dir=${d%/}
-            [ -d "$dir/source" ] || [ -d "$dir/Source" ] || continue
+            # Ignora carpetes del sistema
+            case "$carpeta_programa" in
+              .github|.git|assets|docs) continue ;;
+            esac
 
-            # Nom del programa
-            name=$(echo "$dir" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-
-            # Trobar el .py principal
-            py_path=$(find "$dir" -name "*.py" | head -n1)
-
-            # Compilar
-            pyinstaller --onefile --name "$name" --distpath "./dist_final" "$py_path"
-
-            # Manual (busquem manual.md dins de la carpeta del programa)
-            if [ -f "$dir/manual.md" ]; then
-              python3 convert.py "$dir/manual.md" "dist_final/${name}_manual.html"
-            elif [ -f "$dir/MANUAL.md" ]; then
-              python3 convert.py "$dir/MANUAL.md" "dist_final/${name}_manual.html"
+            # Detecta source/ o Source/
+            if [[ -d "${carpeta_programa}/source" ]]; then
+              source_dir="${carpeta_programa}/source"
+            elif [[ -d "${carpeta_programa}/Source" ]]; then
+              source_dir="${carpeta_programa}/Source"
+            else
+              echo "⚠️  Saltant '${carpeta_programa}': no conté 'source' ni 'Source'"
+              continue
             fi
+
+            # Normalitza el nom de l'executable: minúscules + guions
+            nom_executable=$(echo "$carpeta_programa" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
+
+            # Troba el primer fitxer .py al directori source
+            fitxer_py=$(find "$source_dir" -maxdepth 1 -name "*.py" -type f | head -n1)
+
+            if [[ -z "$fitxer_py" ]]; then
+              echo "⚠️  Saltant '${carpeta_programa}': cap fitxer .py a ${source_dir}"
+              continue
+            fi
+
+            echo "📦 ${carpeta_programa} → ${nom_executable}"
+
+            # Compila amb PyInstaller
+            cd "$source_dir"
+            pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_executable" --distpath "../../dist_linux" --log-level=WARN
+            cd ../..
+
+            # Copia el manual (MANUAL.md o MANUAL_US.md)
+            if [[ -f "${carpeta_programa}/MANUAL.md" ]]; then
+              cp "${carpeta_programa}/MANUAL.md" "dist_linux/${nom_executable}_MANUAL.txt"
+            elif [[ -f "${carpeta_programa}/MANUAL_US.md" ]]; then
+              cp "${carpeta_programa}/MANUAL_US.md" "dist_linux/${nom_executable}_MANUAL.txt"
+            fi
+
+            echo "✅ ${nom_executable} compilat"
           done
+        shell: bash
 
-      # SECCIÓ WINDOWS
-      - name: Build Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -Path "dist_final" -ItemType Directory -Force
-          Get-ChildItem -Directory | ForEach-Object {
-            $src = if (Test-Path "$($_.Name)/source") { "$($_.Name)/source" } else { "$($_.Name)/Source" }
-            if (Test-Path $src) {
-              $exeName = $_.Name.ToLower() -replace ' ', '-'
-              $pyFile = Get-ChildItem "$src/*.py" | Select-Object -First 1
-              if ($pyFile) {
-                pyinstaller --onefile --name $exeName --distpath "dist_final" $pyFile.FullName
-              }
-            }
-          }
-
-      - name: Publicar Release
+      - name: Puja a Release (Linux)
         uses: softprops/action-gh-release@v2
         with:
-          files: dist_final/*
+          files: |
+            dist_linux/*
+            !dist_linux/*.spec
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instal·la PyInstaller
+        run: pip install pyinstaller
+
+      - name: Compila cada programa (Windows)
+        run: |
+          New-Item -Path "dist_windows" -ItemType Directory -Force | Out-Null
+
+          # Processa cada carpeta de primer nivell
+          Get-ChildItem -Directory | ForEach-Object {
+            $carpeta_programa = $_.Name
+
+            # Ignora carpetes del sistema
+            if ($carpeta_programa -in @(".github", ".git", "assets", "docs")) {
+              return
+            }
+
+            # Detecta source/ o Source/
+            $source_dir = $null
+            if (Test-Path "${carpeta_programa}/source") {
+              $source_dir = "${carpeta_programa}/source"
+            } elseif (Test-Path "${carpeta_programa}/Source") {
+              $source_dir = "${carpeta_programa}/Source"
+            } else {
+              Write-Host "⚠️  Saltant '${carpeta_programa}': no conté 'source' ni 'Source'"
+              return
+            }
+
+            # Normalitza el nom de l'executable
+            $nom_executable = $carpeta_programa.ToLower() -replace ' ', '-' -replace '_', '-'
+
+            # Troba el primer fitxer .py
+            $fitxer_py = Get-ChildItem "${source_dir}/*.py" -File | Select-Object -First 1
+
+            if (-not $fitxer_py) {
+              Write-Host "⚠️  Saltant '${carpeta_programa}': cap fitxer .py a ${source_dir}"
+              return
+            }
+
+            Write-Host "📦 ${carpeta_programa} → ${nom_executable}.exe"
+
+            # Compila amb PyInstaller
+            Set-Location $source_dir
+            pyinstaller --onefile $fitxer_py.Name --name $nom_executable --distpath "..\..\dist_windows" --log-level=WARN
+            Set-Location ..\..
+
+            Write-Host "✅ ${nom_executable}.exe compilat"
+          }
+        shell: pwsh
+
+      - name: Puja a Release (Windows)
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist_windows/*.exe
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
