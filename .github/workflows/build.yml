@@ -26,22 +26,15 @@ jobs:
           for carpeta in */; do
             carpeta="${carpeta%/}"
             [[ "$carpeta" =~ ^(\.github|\.git|assets|docs)$ ]] && continue
-
-            # Trobar font
             if [[ -d "${carpeta}/source" ]]; then src="${carpeta}/source"
             elif [[ -d "${carpeta}/Source" ]]; then src="${carpeta}/Source"
             else continue; fi
-
             nom_exe=$(echo "$carpeta" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
             fitxer_py=$(find "$src" -maxdepth 1 -name "*.py" -type f | head -n1)
             [[ -z "$fitxer_py" ]] && continue
-
-            # Compila
             cd "$src"
             pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_exe" --distpath "../../dist_linux" --log-level=WARN
             cd ../..
-
-            # Genera Manual en TXT (només aquí per no duplicar)
             if [[ -f "${carpeta}/manual.md" ]]; then
               cp "${carpeta}/manual.md" "dist_linux/${nom_exe}_manual.txt"
             elif [[ -f "${carpeta}/MANUAL.md" ]]; then
@@ -55,11 +48,13 @@ jobs:
         with:
           files: dist_linux/*
           tag_name: ${{ github.ref_name }}
+          overwrite: true  # Permet sobreescriure si el fitxer ja existeix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
     runs-on: windows-latest
+    needs: build-linux  # OBLIGA a que Windows s'esperi que Linux acabi
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -77,11 +72,9 @@ jobs:
             if ($cap -in @(".github", ".git", "assets", "docs")) { return }
             $src = if (Test-Path "$cap/source") { "$cap/source" } else { "$cap/Source" }
             if (-not (Test-Path $src)) { return }
-
             $exe = $cap.ToLower() -replace ' ', '-' -replace '_', '-'
             $py = Get-ChildItem "$src/*.py" | Select-Object -First 1
             if (-not $py) { return }
-
             Set-Location $src
             pyinstaller --onefile $py.Name --name $exe --distpath "..\..\dist_windows" --log-level=WARN
             Set-Location ..\..
@@ -93,5 +86,6 @@ jobs:
         with:
           files: dist_windows/*.exe
           tag_name: ${{ github.ref_name }}
+          overwrite: true  # Evita l'error de "already exists"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
