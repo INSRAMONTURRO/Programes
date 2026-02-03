@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Instal·la PyInstaller
         run: pip install pyinstaller
-      - name: Compila Linux i cerca Manuals
+      - name: Compila Linux i Manuals
         run: |
           mkdir -p dist_all
           for carpeta in */; do
@@ -31,8 +31,8 @@ jobs:
             fitxer_py=$(find "$src" -maxdepth 1 -name "*.py" -type f | head -n1)
             [[ -z "$fitxer_py" ]] && continue
             cd "$src"
-            # Afegim extensió .bin a Linux per evitar conflictes de nom amb Windows
-            pyinstaller --onefile "$(basename "$fitxer_py")" --name "${nom_exe}.bin" --distpath "../../dist_all" --log-level=WARN
+            # Executable de Linux sense extensió
+            pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_exe" --distpath "../../dist_all" --log-level=WARN
             cd ../..
             manual_trobat=$(find "$carpeta" -maxdepth 2 -iname "manual.md" | head -n1)
             if [[ ! -z "$manual_trobat" ]]; then
@@ -48,7 +48,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Instal·la PyInstaller
@@ -85,22 +85,20 @@ jobs:
           path: release_files
           merge-multiple: true
 
-      - name: Netejar Release existent
-        uses: 8398a7/action-gh-release@v1
-        with:
-          # Aquesta acció esborra els fitxers abans de pujar per evitar el "already_exists"
-          select: "assets"
-          tag_name: ${{ github.ref_name }}
-          mode: delete
+      - name: Publicar Release amb GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true # Per si la release és nova i no té assets
+          TAG: ${{ github.ref_name }}
+        run: |
+          # 1. Creem la release si no existeix (o l'actualitzem)
+          gh release create "$TAG" --title "Release $TAG" --notes "Compilació automàtica" || echo "La release ja existeix"
 
-      - name: Pujar fitxers a Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release_files/*
-          tag_name: ${{ github.ref_name }}
-          overwrite_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 2. Pugem els fitxers un a un amb el comandament oficial de GitHub
+          # L'opció --clobber sobreescriu si ja existeixen
+          for f in release_files/*; do
+            if [ -f "$f" ]; then
+              echo "Pujant $f..."
+              gh release upload "$TAG" "$f" --clobber
+              sleep 1 # Pausa d'un segon per no saturar l'API
+            fi
+          done
