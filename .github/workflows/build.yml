@@ -16,13 +16,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
       - name: Instal·la PyInstaller
         run: pip install pyinstaller
-
-      - name: Compila i genera Manuals TXT (Linux)
+      - name: Compila Linux
         run: |
-          mkdir -p dist_linux
+          mkdir -p dist_all
           for carpeta in */; do
             carpeta="${carpeta%/}"
             [[ "$carpeta" =~ ^(\.github|\.git|assets|docs)$ ]] && continue
@@ -33,40 +31,29 @@ jobs:
             fitxer_py=$(find "$src" -maxdepth 1 -name "*.py" -type f | head -n1)
             [[ -z "$fitxer_py" ]] && continue
             cd "$src"
-            pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_exe" --distpath "../../dist_linux" --log-level=WARN
+            pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_exe" --distpath "../../dist_all" --log-level=WARN
             cd ../..
-            if [[ -f "${carpeta}/manual.md" ]]; then
-              cp "${carpeta}/manual.md" "dist_linux/${nom_exe}_manual.txt"
-            elif [[ -f "${carpeta}/MANUAL.md" ]]; then
-              cp "${carpeta}/MANUAL.md" "dist_linux/${nom_exe}_manual.txt"
-            fi
+            [ -f "${carpeta}/manual.md" ] && cp "${carpeta}/manual.md" "dist_all/${nom_exe}_manual.txt"
+            [ -f "${carpeta}/MANUAL.md" ] && cp "${carpeta}/MANUAL.md" "dist_all/${nom_exe}_manual.txt"
           done
-        shell: bash
-
-      - name: Puja a Release (Linux)
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
         with:
-          files: dist_linux/*
-          tag_name: ${{ github.ref_name }}
-          overwrite_files: true  # Paràmetre corregit
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: linux-assets
+          path: dist_all/
 
   build-windows:
     runs-on: windows-latest
-    needs: build-linux  # Espera que Linux acabi per no col·lisionar
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
       - name: Instal·la PyInstaller
         run: pip install pyinstaller
-
-      - name: Compila (Windows)
+      - name: Compila Windows
+        shell: pwsh
         run: |
-          New-Item -Path "dist_windows" -ItemType Directory -Force
+          New-Item -Path "dist_all" -ItemType Directory -Force
           Get-ChildItem -Directory | ForEach-Object {
             $cap = $_.Name
             if ($cap -in @(".github", ".git", "assets", "docs")) { return }
@@ -74,18 +61,31 @@ jobs:
             if (-not (Test-Path $src)) { return }
             $exe = $cap.ToLower() -replace ' ', '-' -replace '_', '-'
             $py = Get-ChildItem "$src/*.py" | Select-Object -First 1
-            if (-not $py) { return }
-            Set-Location $src
-            pyinstaller --onefile $py.Name --name $exe --distpath "..\..\dist_windows" --log-level=WARN
-            Set-Location ..\..
+            if ($py) {
+              Set-Location $src
+              pyinstaller --onefile $py.Name --name $exe --distpath "..\..\dist_all" --log-level=WARN
+              Set-Location ..\..
+            }
           }
-        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-assets
+          path: dist_all/
 
-      - name: Puja a Release (Windows)
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build-linux, build-windows]
+    steps:
+      - name: Baixa tots els fitxers
+        uses: actions/download-artifact@v4
+        with:
+          path: release_files
+          merge-multiple: true
+      - name: Crear Release i pujar tot
         uses: softprops/action-gh-release@v2
         with:
-          files: dist_windows/*.exe
+          files: release_files/*
           tag_name: ${{ github.ref_name }}
-          overwrite_files: true  # Paràmetre corregit
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
