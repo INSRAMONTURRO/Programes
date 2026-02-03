@@ -31,7 +31,8 @@ jobs:
             fitxer_py=$(find "$src" -maxdepth 1 -name "*.py" -type f | head -n1)
             [[ -z "$fitxer_py" ]] && continue
             cd "$src"
-            pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_exe" --distpath "../../dist_all" --log-level=WARN
+            # Afegim extensió .bin a Linux per evitar conflictes de nom amb Windows
+            pyinstaller --onefile "$(basename "$fitxer_py")" --name "${nom_exe}.bin" --distpath "../../dist_all" --log-level=WARN
             cd ../..
             manual_trobat=$(find "$carpeta" -maxdepth 2 -iname "manual.md" | head -n1)
             if [[ ! -z "$manual_trobat" ]]; then
@@ -84,22 +85,22 @@ jobs:
           path: release_files
           merge-multiple: true
 
-      - name: Publicar fitxers un a un
-        shell: bash
-        run: |
-          # Aquesta acció de sota és molt robusta per a múltiples fitxers
-          # Usarem un bucle per assegurar que no col·lapsa l'API
-          ls -R release_files/
+      - name: Netejar Release existent
+        uses: 8398a7/action-gh-release@v1
+        with:
+          # Aquesta acció esborra els fitxers abans de pujar per evitar el "already_exists"
+          select: "assets"
+          tag_name: ${{ github.ref_name }}
+          mode: delete
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true # Per si la release és nova i no té assets
 
-      - name: Crear Release
+      - name: Pujar fitxers a Release
         uses: softprops/action-gh-release@v2
         with:
           files: release_files/*
           tag_name: ${{ github.ref_name }}
-          # El secret aquí és que l'acció de softprops té un paràmetre per
-          # no fallar si hi ha errors de paral·lelisme puntuals
-          fail_on_unmatched_files: false
-          # overwrite_files ja el teníem, però ara ho fem des d'un sol lloc
           overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
