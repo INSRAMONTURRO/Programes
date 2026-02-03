@@ -36,44 +36,58 @@ jobs:
         run: |
           mkdir -p dist_linux
 
-          # Creem un script de python extern per evitar errors de YAML
+          # Creem l'script de conversió de Markdown a HTML de forma aïllada
           cat << 'EOF' > convert_md.py
-          import markdown, sys
-          import os
+          import markdown, sys, os
           def convert(md_path, html_path):
-              with open(md_path, 'r', encoding='utf-8') as f:
-                  body = markdown.markdown(f.read(), extensions=['extra', 'tables', 'fenced_code'])
-              with open(html_path, 'w', encoding='utf-8') as f:
-                  f.write(f'<html><body style="font-family:sans-serif;max-width:800px;margin:auto;padding:2em">{body}</body></html>')
+              try:
+                  with open(md_path, 'r', encoding='utf-8') as f:
+                      md_content = f.read()
+                  html_body = markdown.markdown(md_content, extensions=['extra', 'tables', 'fenced_code'])
+                  full_html = f'<html><body style="font-family:sans-serif;max-width:800px;margin:auto;padding:2em">{html_body}</body></html>'
+                  with open(html_path, 'w', encoding='utf-8') as f:
+                      f.write(full_html)
+                  print(f"✅ MANUAL GENERAT: {html_path}")
+              except Exception as e:
+                  print(f"❌ ERROR en convertir {md_path}: {e}")
+
           if __name__ == "__main__":
-              convert(sys.argv[1], sys.argv[2])
+              if len(sys.argv) > 2:
+                  convert(sys.argv[1], sys.argv[2])
           EOF
 
           for dir in */; do
             dir="${dir%/}"
             [[ "$dir" =~ ^(\.github|\.git|assets|docs)$ ]] && continue
 
+            # Detectar directori source
             src_dir=""
             [ -d "$dir/source" ] && src_dir="$dir/source"
             [ -d "$dir/Source" ] && src_dir="$dir/Source"
             [ -z "$src_dir" ] && continue
 
+            # Nom de l'executable
             exe_name=$(echo "$dir" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
+
+            # Trobar el fitxer .py
             py_file=$(find "$src_dir" -maxdepth 1 -name "*.py" | head -n1)
             [ -z "$py_file" ] && continue
 
-            # Compilació
+            # 1. Compilar amb PyInstaller
             pyinstaller --onefile --clean --name "$exe_name" --distpath "./dist_linux" --log-level=WARN "$py_file"
 
-            # Generació de Manual HTML
-            for m_file in "$dir/MANUAL.md" "$dir/MANUAL_US.md"; do
-              if [ -f "$m_file" ]; then
-                echo "Convertint $m_file..."
-                python3 convert_md.py "$m_file" "dist_linux/${exe_name}_MANUAL.html"
-                break
-              fi
-            done
+            # 2. Generar Manual HTML si existeix manual.md (o MANUAL.md)
+            # Busquem a l'arrel de la carpeta del programa
+            manual_md=$(find "$dir" -maxdepth 1 -iname "manual.md" | head -n1)
+            if [ ! -z "$manual_md" ]; then
+              python3 convert_md.py "$manual_md" "dist_linux/${exe_name}_manual.html"
+            else
+              echo "ℹ️ No s'ha trobat manual.md a $dir"
+            fi
           done
+
+          echo "Contingut final de dist_linux:"
+          ls -R dist_linux/
 
       - name: Compila (Windows)
         if: matrix.platform == 'windows'
@@ -83,16 +97,20 @@ jobs:
           Get-ChildItem -Directory | ForEach-Object {
             $name = $_.Name
             if ($name -in @(".github", ".git", "assets", "docs")) { return }
+
             $src = if (Test-Path "$name/source") { "$name/source" } else { "$name/Source" }
             if (-not (Test-Path $src)) { return }
+
             $exe = $name.ToLower() -replace ' ', '-' -replace '_', '-'
             $py = Get-ChildItem "$src/*.py" | Select-Object -First 1
             if (-not $py) { return }
+
             pyinstaller --onefile --clean --name $exe --distpath "dist_windows" --log-level=WARN $py.FullName
           }
 
       - name: Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             dist_linux/*
