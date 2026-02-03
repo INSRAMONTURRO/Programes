@@ -39,7 +39,6 @@ jobs:
             dir="${dir%/}"
             [[ "$dir" =~ ^(\.github|\.git|assets|docs)$ ]] && continue
 
-            # Trobar font
             src_dir=""
             [ -d "$dir/source" ] && src_dir="$dir/source"
             [ -d "$dir/Source" ] && src_dir="$dir/Source"
@@ -49,23 +48,24 @@ jobs:
             py_file=$(find "$src_dir" -maxdepth 1 -name "*.py" | head -n1)
             [ -z "$py_file" ] && continue
 
-            # PyInstaller
+            # Compilació
             pyinstaller --onefile --clean --name "$exe_name" --distpath "./dist_linux" --log-level=WARN "$py_file"
 
-            # Generar HTML (Markdown)
+            # Generació de Manual HTML
             manual_file=""
             [ -f "$dir/MANUAL.md" ] && manual_file="$dir/MANUAL.md"
             [ -f "$dir/MANUAL_US.md" ] && manual_file="$dir/MANUAL_US.md"
 
-            if [ -not -z "$manual_file" ]; then
+            if [ ! -z "$manual_file" ]; then
               python3 -c "
-import markdown, os
-with open('$manual_file', 'r', encoding='utf-8') as f:
-    content = f.read()
-html = markdown.markdown(content, extensions=['extra', 'tables', 'fenced_code'])
-with open('dist_linux/${exe_name}_MANUAL.html', 'w', encoding='utf-8') as f:
-    f.write(f'<html><body style=\"font-family:sans-serif;max-width:800px;margin:auto;padding:2em\">{html}</body></html>')
-"
+import markdown, sys
+m_in = sys.argv[1]
+h_out = sys.argv[2]
+with open(m_in, 'r', encoding='utf-8') as f:
+    body = markdown.markdown(f.read(), extensions=['extra', 'tables', 'fenced_code'])
+with open(h_out, 'w', encoding='utf-8') as f:
+    f.write(f'<html><body style=\"font-family:sans-serif;max-width:800px;margin:auto;padding:2em\">{body}</body></html>')
+" "$manual_file" "dist_linux/${exe_name}_MANUAL.html"
             fi
           done
 
@@ -77,14 +77,11 @@ with open('dist_linux/${exe_name}_MANUAL.html', 'w', encoding='utf-8') as f:
           Get-ChildItem -Directory | ForEach-Object {
             $name = $_.Name
             if ($name -in @(".github", ".git", "assets", "docs")) { return }
-
             $src = if (Test-Path "$name/source") { "$name/source" } else { "$name/Source" }
             if (-not (Test-Path $src)) { return }
-
             $exe = $name.ToLower() -replace ' ', '-' -replace '_', '-'
             $py = Get-ChildItem "$src/*.py" | Select-Object -First 1
             if (-not $py) { return }
-
             pyinstaller --onefile --clean --name $exe --distpath "dist_windows" --log-level=WARN $py.FullName
           }
 
