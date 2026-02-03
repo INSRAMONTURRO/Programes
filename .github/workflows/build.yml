@@ -48,13 +48,13 @@ jobs:
         with:
           files: dist_linux/*
           tag_name: ${{ github.ref_name }}
-          overwrite: true  # Permet sobreescriure si el fitxer ja existeix
+          overwrite_files: true  # Paràmetre corregit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
     runs-on: windows-latest
-    needs: build-linux  # OBLIGA a que Windows s'esperi que Linux acabi
+    needs: build-linux  # Espera que Linux acabi per no col·lisionar
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -86,6 +86,6 @@ jobs:
         with:
           files: dist_windows/*.exe
           tag_name: ${{ github.ref_name }}
-          overwrite: true  # Evita l'error de "already exists"
+          overwrite_files: true  # Paràmetre corregit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
