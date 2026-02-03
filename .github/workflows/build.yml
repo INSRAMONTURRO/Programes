@@ -19,10 +19,10 @@ jobs:
             platform: linux
           - os: windows-latest
             platform: windows
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -35,10 +35,24 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist_linux
+
+          # Creem un script de python extern per evitar errors de YAML
+          cat << 'EOF' > convert_md.py
+          import markdown, sys
+          import os
+          def convert(md_path, html_path):
+              with open(md_path, 'r', encoding='utf-8') as f:
+                  body = markdown.markdown(f.read(), extensions=['extra', 'tables', 'fenced_code'])
+              with open(html_path, 'w', encoding='utf-8') as f:
+                  f.write(f'<html><body style="font-family:sans-serif;max-width:800px;margin:auto;padding:2em">{body}</body></html>')
+          if __name__ == "__main__":
+              convert(sys.argv[1], sys.argv[2])
+          EOF
+
           for dir in */; do
             dir="${dir%/}"
             [[ "$dir" =~ ^(\.github|\.git|assets|docs)$ ]] && continue
-            
+
             src_dir=""
             [ -d "$dir/source" ] && src_dir="$dir/source"
             [ -d "$dir/Source" ] && src_dir="$dir/Source"
@@ -52,20 +66,13 @@ jobs:
             pyinstaller --onefile --clean --name "$exe_name" --distpath "./dist_linux" --log-level=WARN "$py_file"
 
             # Generació de Manual HTML
-            manual_file=""
-            [ -f "$dir/MANUAL.md" ] && manual_file="$dir/MANUAL.md"
-            [ -f "$dir/MANUAL_US.md" ] && manual_file="$dir/MANUAL_US.md"
-
-            if [ ! -z "$manual_file" ]; then
-              echo "Generant HTML per a $manual_file..."
-              python3 <<EOF
-import markdown
-with open('$manual_file', 'r', encoding='utf-8') as f:
-    body = markdown.markdown(f.read(), extensions=['extra', 'tables', 'fenced_code'])
-with open('dist_linux/${exe_name}_MANUAL.html', 'w', encoding='utf-8') as f:
-    f.write(f'<html><body style="font-family:sans-serif;max-width:800px;margin:auto;padding:2em">{body}</body></html>')
-EOF
-            fi
+            for m_file in "$dir/MANUAL.md" "$dir/MANUAL_US.md"; do
+              if [ -f "$m_file" ]; then
+                echo "Convertint $m_file..."
+                python3 convert_md.py "$m_file" "dist_linux/${exe_name}_MANUAL.html"
+                break
+              fi
+            done
           done
 
       - name: Compila (Windows)
