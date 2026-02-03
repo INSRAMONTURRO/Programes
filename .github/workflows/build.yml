@@ -19,10 +19,10 @@ jobs:
             platform: linux
           - os: windows-latest
             platform: windows
-
+    
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -38,7 +38,7 @@ jobs:
           for dir in */; do
             dir="${dir%/}"
             [[ "$dir" =~ ^(\.github|\.git|assets|docs)$ ]] && continue
-
+            
             src_dir=""
             [ -d "$dir/source" ] && src_dir="$dir/source"
             [ -d "$dir/Source" ] && src_dir="$dir/Source"
@@ -57,15 +57,14 @@ jobs:
             [ -f "$dir/MANUAL_US.md" ] && manual_file="$dir/MANUAL_US.md"
 
             if [ ! -z "$manual_file" ]; then
-              python3 -c "
-import markdown, sys
-m_in = sys.argv[1]
-h_out = sys.argv[2]
-with open(m_in, 'r', encoding='utf-8') as f:
+              echo "Generant HTML per a $manual_file..."
+              python3 <<EOF
+import markdown
+with open('$manual_file', 'r', encoding='utf-8') as f:
     body = markdown.markdown(f.read(), extensions=['extra', 'tables', 'fenced_code'])
-with open(h_out, 'w', encoding='utf-8') as f:
-    f.write(f'<html><body style=\"font-family:sans-serif;max-width:800px;margin:auto;padding:2em\">{body}</body></html>')
-" "$manual_file" "dist_linux/${exe_name}_MANUAL.html"
+with open('dist_linux/${exe_name}_MANUAL.html', 'w', encoding='utf-8') as f:
+    f.write(f'<html><body style="font-family:sans-serif;max-width:800px;margin:auto;padding:2em">{body}</body></html>')
+EOF
             fi
           done
 
