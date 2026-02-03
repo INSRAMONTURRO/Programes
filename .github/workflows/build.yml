@@ -9,365 +9,91 @@ permissions:
   contents: write
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: windows
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Instal·la dependències
         run: pip install pyinstaller markdown
 
-      - name: Compila cada programa (Linux)
+      - name: Compila i genera Manual (Linux)
+        if: matrix.platform == 'linux'
+        shell: bash
         run: |
           mkdir -p dist_linux
+          for dir in */; do
+            dir="${dir%/}"
+            [[ "$dir" =~ ^(\.github|\.git|assets|docs)$ ]] && continue
 
-          # Processa cada carpeta de primer nivell
-          for carpeta_programa in */; do
-            carpeta_programa="${carpeta_programa%/}"  # Elimina la barra final
+            # Trobar font
+            src_dir=""
+            [ -d "$dir/source" ] && src_dir="$dir/source"
+            [ -d "$dir/Source" ] && src_dir="$dir/Source"
+            [ -z "$src_dir" ] && continue
 
-            # Ignora carpetes del sistema
-            case "$carpeta_programa" in
-              .github|.git|assets|docs) continue ;;
-            esac
+            exe_name=$(echo "$dir" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
+            py_file=$(find "$src_dir" -maxdepth 1 -name "*.py" | head -n1)
+            [ -z "$py_file" ] && continue
 
-            # Detecta source/ o Source/
-            if [[ -d "${carpeta_programa}/source" ]]; then
-              source_dir="${carpeta_programa}/source"
-            elif [[ -d "${carpeta_programa}/Source" ]]; then
-              source_dir="${carpeta_programa}/Source"
-            else
-              echo "⚠️  Saltant '${carpeta_programa}': no conté 'source' ni 'Source'"
-              continue
-            fi
+            # PyInstaller
+            pyinstaller --onefile --clean --name "$exe_name" --distpath "./dist_linux" --log-level=WARN "$py_file"
 
-            # Normalitza el nom de l'executable: minúscules + guions
-            nom_executable=$(echo "$carpeta_programa" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
+            # Generar HTML (Markdown)
+            manual_file=""
+            [ -f "$dir/MANUAL.md" ] && manual_file="$dir/MANUAL.md"
+            [ -f "$dir/MANUAL_US.md" ] && manual_file="$dir/MANUAL_US.md"
 
-            # Troba el primer fitxer .py al directori source
-            fitxer_py=$(find "$source_dir" -maxdepth 1 -name "*.py" -type f | head -n1)
-
-            if [[ -z "$fitxer_py" ]]; then
-              echo "⚠️  Saltant '${carpeta_programa}': cap fitxer .py a ${source_dir}"
-              continue
-            fi
-
-            echo "📦 ${carpeta_programa} → ${nom_executable}"
-
-            # Compila amb PyInstaller
-            cd "$source_dir"
-
-            # NETEJA: Elimina fitxers de compilacions anteriors
-            rm -rf build dist *.spec __pycache__
-
-            # Compila amb nom explícit i opcions de neteja
-            pyinstaller --onefile \
-              --clean \
-              --name "$nom_executable" \
-              --distpath "../../dist_linux" \
-              --workpath "./build" \
-              --specpath "./build" \
-              --log-level=WARN \
-              "$(basename "$fitxer_py")"
-
-            # Neteja fitxers temporals després de compilar
-            rm -rf build *.spec __pycache__
-
-            cd ../..
-
-            # Converteix el manual a HTML
-            if [[ -f "${carpeta_programa}/MANUAL.md" ]]; then
-              echo "📄 Convertint MANUAL.md a HTML..."
+            if [ -not -z "$manual_file" ]; then
               python3 -c "
-import markdown
-import sys
-
-md_file = '${carpeta_programa}/MANUAL.md'
-html_file = 'dist_linux/${nom_executable}_MANUAL.html'
-
-with open(md_file, 'r', encoding='utf-8') as f:
-    md_content = f.read()
-
-html_body = markdown.markdown(md_content, extensions=['extra', 'tables', 'fenced_code'])
-
-html_template = '''<!DOCTYPE html>
-<html lang=\"ca\">
-<head>
-    <meta charset=\"UTF-8\">
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <title>Manual</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 2em auto;
-            padding: 0 2em;
-            color: #333;
-        }
-        h1, h2, h3, h4 {
-            color: #2c3e50;
-            margin-top: 1.5em;
-        }
-        h1 {
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 0.3em;
-        }
-        h2 {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 0.3em;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: Courier New, monospace;
-            font-size: 0.9em;
-        }
-        pre {
-            background-color: #f4f4f4;
-            padding: 1em;
-            border-radius: 5px;
-            overflow-x: auto;
-            border-left: 4px solid #3498db;
-        }
-        pre code {
-            background: none;
-            padding: 0;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 1em 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #3498db;
-            color: white;
-        }
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        blockquote {
-            border-left: 4px solid #3498db;
-            padding-left: 1em;
-            margin-left: 0;
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-''' + html_body + '''
-</body>
-</html>
-'''
-
-with open(html_file, 'w', encoding='utf-8') as f:
-    f.write(html_template)
-
-print('✅ HTML creat: ' + html_file)
-"
-            elif [[ -f "${carpeta_programa}/MANUAL_US.md" ]]; then
-              echo "📄 Convertint MANUAL_US.md a HTML..."
-              python3 -c "
-import markdown
-import sys
-
-md_file = '${carpeta_programa}/MANUAL_US.md'
-html_file = 'dist_linux/${nom_executable}_MANUAL.html'
-
-with open(md_file, 'r', encoding='utf-8') as f:
-    md_content = f.read()
-
-html_body = markdown.markdown(md_content, extensions=['extra', 'tables', 'fenced_code'])
-
-html_template = '''<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"UTF-8\">
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <title>Manual</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 2em auto;
-            padding: 0 2em;
-            color: #333;
-        }
-        h1, h2, h3, h4 {
-            color: #2c3e50;
-            margin-top: 1.5em;
-        }
-        h1 {
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 0.3em;
-        }
-        h2 {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 0.3em;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: Courier New, monospace;
-            font-size: 0.9em;
-        }
-        pre {
-            background-color: #f4f4f4;
-            padding: 1em;
-            border-radius: 5px;
-            overflow-x: auto;
-            border-left: 4px solid #3498db;
-        }
-        pre code {
-            background: none;
-            padding: 0;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 1em 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #3498db;
-            color: white;
-        }
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        blockquote {
-            border-left: 4px solid #3498db;
-            padding-left: 1em;
-            margin-left: 0;
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-''' + html_body + '''
-</body>
-</html>
-'''
-
-with open(html_file, 'w', encoding='utf-8') as f:
-    f.write(html_template)
-
-print('✅ HTML creat: ' + html_file)
+import markdown, os
+with open('$manual_file', 'r', encoding='utf-8') as f:
+    content = f.read()
+html = markdown.markdown(content, extensions=['extra', 'tables', 'fenced_code'])
+with open('dist_linux/${exe_name}_MANUAL.html', 'w', encoding='utf-8') as f:
+    f.write(f'<html><body style=\"font-family:sans-serif;max-width:800px;margin:auto;padding:2em\">{html}</body></html>')
 "
             fi
-
-            echo "✅ ${nom_executable} compilat"
           done
-        shell: bash
 
-      - name: Puja a Release (Linux)
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist_linux/*
-          tag_name: ${{ github.ref_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-windows:
-    runs-on: windows-latest
-    needs: build-linux
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Instal·la PyInstaller
-        run: pip install pyinstaller
-
-      - name: Compila cada programa (Windows)
-        run: |
-          New-Item -Path "dist_windows" -ItemType Directory -Force | Out-Null
-
-          # Processa cada carpeta de primer nivell
-          Get-ChildItem -Directory | ForEach-Object {
-            $carpeta_programa = $_.Name
-
-            # Ignora carpetes del sistema
-            if ($carpeta_programa -in @(".github", ".git", "assets", "docs")) {
-              return
-            }
-
-            # Detecta source/ o Source/
-            $source_dir = $null
-            if (Test-Path "${carpeta_programa}/source") {
-              $source_dir = "${carpeta_programa}/source"
-            } elseif (Test-Path "${carpeta_programa}/Source") {
-              $source_dir = "${carpeta_programa}/Source"
-            } else {
-              Write-Host "⚠️  Saltant '${carpeta_programa}': no conté 'source' ni 'Source'"
-              return
-            }
-
-            # Normalitza el nom de l'executable
-            $nom_executable = $carpeta_programa.ToLower() -replace ' ', '-' -replace '_', '-'
-
-            # Troba el primer fitxer .py
-            $fitxer_py = Get-ChildItem "${source_dir}/*.py" -File | Select-Object -First 1
-
-            if (-not $fitxer_py) {
-              Write-Host "⚠️  Saltant '${carpeta_programa}': cap fitxer .py a ${source_dir}"
-              return
-            }
-
-            Write-Host "📦 ${carpeta_programa} → ${nom_executable}.exe"
-
-            # Compila amb PyInstaller
-            Set-Location $source_dir
-
-            # NETEJA: Elimina fitxers de compilacions anteriors
-            Remove-Item -Path "build", "dist", "*.spec", "__pycache__" -Recurse -Force -ErrorAction SilentlyContinue
-
-            # Compila amb nom explícit i opcions de neteja
-            pyinstaller --onefile `
-              --clean `
-              --name $nom_executable `
-              --distpath "..\..\dist_windows" `
-              --workpath ".\build" `
-              --specpath ".\build" `
-              --log-level=WARN `
-              $fitxer_py.Name
-
-            # Neteja fitxers temporals després de compilar
-            Remove-Item -Path "build", "*.spec", "__pycache__" -Recurse -Force -ErrorAction SilentlyContinue
-
-            Set-Location ..\..
-
-            Write-Host "✅ ${nom_executable}.exe compilat"
-          }
+      - name: Compila (Windows)
+        if: matrix.platform == 'windows'
         shell: pwsh
+        run: |
+          New-Item -Path "dist_windows" -ItemType Directory -Force
+          Get-ChildItem -Directory | ForEach-Object {
+            $name = $_.Name
+            if ($name -in @(".github", ".git", "assets", "docs")) { return }
 
-      - name: Puja a Release (Windows)
+            $src = if (Test-Path "$name/source") { "$name/source" } else { "$name/Source" }
+            if (-not (Test-Path $src)) { return }
+
+            $exe = $name.ToLower() -replace ' ', '-' -replace '_', '-'
+            $py = Get-ChildItem "$src/*.py" | Select-Object -First 1
+            if (-not $py) { return }
+
+            pyinstaller --onefile --clean --name $exe --distpath "dist_windows" --log-level=WARN $py.FullName
+          }
+
+      - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist_windows/*.exe
+          files: |
+            dist_linux/*
+            dist_windows/*.exe
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
