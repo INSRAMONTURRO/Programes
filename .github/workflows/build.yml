@@ -17,8 +17,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instal·la PyInstaller
-        run: pip install pyinstaller
+      - name: Instal·la dependències
+        run: pip install pyinstaller markdown
 
       - name: Compila cada programa (Linux)
         run: |
@@ -77,11 +77,203 @@ jobs:
 
             cd ../..
 
-            # Copia el manual (MANUAL.md o MANUAL_US.md)
+            # Converteix el manual a HTML
             if [[ -f "${carpeta_programa}/MANUAL.md" ]]; then
-              cp "${carpeta_programa}/MANUAL.md" "dist_linux/${nom_executable}_MANUAL.txt"
+              echo "📄 Convertint MANUAL.md a HTML..."
+              python3 << 'PYTHON_SCRIPT'
+import markdown
+
+md_file = "${carpeta_programa}/MANUAL.md"
+html_file = "dist_linux/${nom_executable}_MANUAL.html"
+
+with open(md_file, 'r', encoding='utf-8') as f:
+    md_content = f.read()
+
+html_body = markdown.markdown(md_content, extensions=['extra', 'tables', 'fenced_code', 'codehilite'])
+
+html_template = f"""<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual - {md_file.split('/')[-2]}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 2em auto;
+            padding: 0 2em;
+            color: #333;
+        }}
+        h1, h2, h3, h4 {{
+            color: #2c3e50;
+            margin-top: 1.5em;
+        }}
+        h1 {{
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.3em;
+        }}
+        h2 {{
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.3em;
+        }}
+        code {{
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }}
+        pre {{
+            background-color: #f4f4f4;
+            padding: 1em;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #3498db;
+        }}
+        pre code {{
+            background: none;
+            padding: 0;
+        }}
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }}
+        th, td {{
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }}
+        th {{
+            background-color: #3498db;
+            color: white;
+        }}
+        a {{
+            color: #3498db;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
+        }}
+        blockquote {{
+            border-left: 4px solid #3498db;
+            padding-left: 1em;
+            margin-left: 0;
+            color: #666;
+        }}
+    </style>
+</head>
+<body>
+{html_body}
+</body>
+</html>
+"""
+
+with open(html_file, 'w', encoding='utf-8') as f:
+    f.write(html_template)
+
+print(f"✅ HTML creat: {html_file}")
+PYTHON_SCRIPT
             elif [[ -f "${carpeta_programa}/MANUAL_US.md" ]]; then
-              cp "${carpeta_programa}/MANUAL_US.md" "dist_linux/${nom_executable}_MANUAL.txt"
+              echo "📄 Convertint MANUAL_US.md a HTML..."
+              python3 << 'PYTHON_SCRIPT'
+import markdown
+
+md_file = "${carpeta_programa}/MANUAL_US.md"
+html_file = "dist_linux/${nom_executable}_MANUAL.html"
+
+with open(md_file, 'r', encoding='utf-8') as f:
+    md_content = f.read()
+
+html_body = markdown.markdown(md_content, extensions=['extra', 'tables', 'fenced_code', 'codehilite'])
+
+html_template = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual - {md_file.split('/')[-2]}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 2em auto;
+            padding: 0 2em;
+            color: #333;
+        }}
+        h1, h2, h3, h4 {{
+            color: #2c3e50;
+            margin-top: 1.5em;
+        }}
+        h1 {{
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.3em;
+        }}
+        h2 {{
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.3em;
+        }}
+        code {{
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }}
+        pre {{
+            background-color: #f4f4f4;
+            padding: 1em;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #3498db;
+        }}
+        pre code {{
+            background: none;
+            padding: 0;
+        }}
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }}
+        th, td {{
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }}
+        th {{
+            background-color: #3498db;
+            color: white;
+        }}
+        a {{
+            color: #3498db;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
+        }}
+        blockquote {{
+            border-left: 4px solid #3498db;
+            padding-left: 1em;
+            margin-left: 0;
+            color: #666;
+        }}
+    </style>
+</head>
+<body>
+{html_body}
+</body>
+</html>
+"""
+
+with open(html_file, 'w', encoding='utf-8') as f:
+    f.write(html_template)
+
+print(f"✅ HTML creat: {html_file}")
+PYTHON_SCRIPT
             fi
 
             echo "✅ ${nom_executable} compilat"
@@ -91,9 +283,7 @@ jobs:
       - name: Puja a Release (Linux)
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist_linux/*
-            !dist_linux/*.spec
+          files: dist_linux/*
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
