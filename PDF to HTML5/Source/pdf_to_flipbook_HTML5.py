@@ -34,6 +34,17 @@ from pathlib import Path
 import zipfile
 import webbrowser
 from tkinter import font
+import sys
+
+def resource_path(relative_path):
+    """ Retorna la ruta absoluta al recurs, funciona per a desenvolupament i per a PyInstaller """
+    try:
+        # PyInstaller crea una carpeta temporal i guarda la ruta a _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    
+    return os.path.join(base_path, relative_path)
 
 class PDFToFlipbookConverter:
     def __init__(self, root):
@@ -234,10 +245,10 @@ class PDFToFlipbookConverter:
 
     def copy_vertical_templates(self, temp_path):
         """Copy vertical templates from templates_extracted folder"""
-        templates_path = Path(__file__).parent / "templates_extracted"
+        templates_path = Path(resource_path("templates_extracted"))
         if not templates_path.exists():
             # Try with templates folder as alternative
-            templates_path = Path(__file__).parent / "templates"
+            templates_path = Path(resource_path("templates"))
             if not templates_path.exists():
                 raise FileNotFoundError(f"No s'ha trobat la carpeta de plantilles: {templates_path}")
         
@@ -250,10 +261,10 @@ class PDFToFlipbookConverter:
 
     def copy_horizontal_templates(self, temp_path):
         """Copy horizontal templates from templates_H_extracted folder"""
-        templates_path = Path(__file__).parent / "templates_H_extracted"
+        templates_path = Path(resource_path("templates_H_extracted"))
         if not templates_path.exists():
             # Try with templates_H folder as alternative
-            templates_path = Path(__file__).parent / "templates_H"
+            templates_path = Path(resource_path("templates_H"))
             if not templates_path.exists():
                 raise FileNotFoundError(f"No s'ha trobat la carpeta de plantilles horitzontals: {templates_path}")
         

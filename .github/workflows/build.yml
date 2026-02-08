@@ -36,7 +36,22 @@ jobs:
             elif [[ -f "requirements.txt" ]]; then
               pip install -r requirements.txt
             fi
-            pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_exe" --distpath "../../dist_all" --log-level=WARN
+
+            # Gestionar fitxers addicionals
+            add_data_args=""
+            if [[ -f "fitxers_addicionals.txt" ]]; then
+              while IFS= read -r line; do
+                # Assegurem-nos de no afegir línies buides
+                if [[ -n "$line" ]]; then
+                  add_data_args+=" --add-data \"${line}:${line}\""
+                fi
+              done < "fitxers_addicionals.txt"
+            fi
+            
+            # La comanda pyinstaller ara inclou els arguments --add-data
+            # L'ús de 'eval' és per expandir correctament els arguments que contenen espais i cometes
+            eval "pyinstaller --onefile '$(basename "$fitxer_py")' --name '$nom_exe' --distpath '../../dist_all' --log-level=WARN $add_data_args"
+            
             cd ../..
             manual_trobat=$(find "$carpeta" -maxdepth 2 -iname "manual.md" | head -n1)
             if [[ ! -z "$manual_trobat" ]]; then
@@ -76,7 +91,24 @@ jobs:
               elseif (Test-Path "requirements.txt") {
                 pip install -r requirements.txt
               }
-              pyinstaller --onefile $py.Name --name $exe --distpath "..\..\dist_all" --log-level=WARN
+
+              # Gestionar fitxers addicionals per a Windows
+              $addDataArgs = ""
+              if (Test-Path "fitxers_addicionals.txt") {
+                Get-Content "fitxers_addicionals.txt" | ForEach-Object {
+                  if (-not [string]::IsNullOrWhiteSpace($_)) {
+                    $addDataArgs += " --add-data `"$_;$_`""
+                  }
+                }
+              }
+              
+              # Executem PyInstaller amb els arguments addicionals
+              $pyinstallerCmd = "pyinstaller --onefile $($py.Name) --name $exe --distpath `"`"..\..\dist_all`"`" --log-level=WARN"
+              if ($addDataArgs) {
+                $pyinstallerCmd += $addDataArgs
+              }
+              Invoke-Expression $pyinstallerCmd
+              
               Set-Location ..\..
             }
           }
