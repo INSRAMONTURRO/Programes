@@ -92,22 +92,29 @@ jobs:
                 pip install -r requirements.txt
               }
 
+              # Construir una llista d'arguments per a PyInstaller de manera robusta
+              $pyinstallerArgs = @(
+                "--onefile",
+                $py.Name,
+                "--name",
+                $exe,
+                "--distpath",
+                "..\..\dist_all",
+                "--log-level=WARN"
+              )
+
               # Gestionar fitxers addicionals per a Windows
-              $addDataArgs = ""
               if (Test-Path "fitxers_addicionals.txt") {
                 Get-Content "fitxers_addicionals.txt" | ForEach-Object {
                   if (-not [string]::IsNullOrWhiteSpace($_)) {
-                    $addDataArgs += " --add-data `"$_;$_`""
+                    $pyinstallerArgs += "--add-data"
+                    $pyinstallerArgs += "$_`;$_"
                   }
                 }
               }
               
-              # Executem PyInstaller amb els arguments addicionals
-              $pyinstallerCmd = "pyinstaller --onefile $($py.Name) --name $exe --distpath `"`"..\..\dist_all`"`" --log-level=WARN"
-              if ($addDataArgs) {
-                $pyinstallerCmd += $addDataArgs
-              }
-              Invoke-Expression $pyinstallerCmd
+              # Executar PyInstaller amb la llista d'arguments
+              pyinstaller @pyinstallerArgs
               
               Set-Location ..\..
             }
