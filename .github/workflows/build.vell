@@ -31,11 +31,6 @@ jobs:
             fitxer_py=$(find "$src" -maxdepth 1 -name "*.py" -type f | head -n1)
             [[ -z "$fitxer_py" ]] && continue
             cd "$src"
-            if [[ -f "requeriments.txt" ]]; then
-              pip install -r requeriments.txt
-            elif [[ -f "requirements.txt" ]]; then
-              pip install -r requirements.txt
-            fi
             pyinstaller --onefile "$(basename "$fitxer_py")" --name "$nom_exe" --distpath "../../dist_all" --log-level=WARN
             cd ../..
             manual_trobat=$(find "$carpeta" -maxdepth 2 -iname "manual.md" | head -n1)
@@ -70,12 +65,6 @@ jobs:
             $py = Get-ChildItem "$src/*.py" | Select-Object -First 1
             if ($py) {
               Set-Location $src
-              if (Test-Path "requeriments.txt") {
-                pip install -r requeriments.txt
-              }
-              elseif (Test-Path "requirements.txt") {
-                pip install -r requirements.txt
-              }
               pyinstaller --onefile $py.Name --name $exe --distpath "..\..\dist_all" --log-level=WARN
               Set-Location ..\..
             }
