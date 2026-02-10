@@ -2,3 +2,5 @@ pandas
 openpyxl
 numpy
 undetected-chromedriver
+odfpy
+python-dotenv

@@ -1,0 +1,32 @@
+# Entorns virtuals
+.venv/
+venv/
+ENV/
+
+# Fitxers de configuració local
+.env
+
+# Fitxers temporals de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Fitxers de sistema operatiu
+.DS_Store
+Thumbs.db
+
+# Fitxers generats per l'aplicació
+/temp_faltes/
+/informes/
+*.xlsx
+*.ods
+*.md
+
+# Excepcions per als fitxers que sí que volem versionar
+!MANUAL_US.md
+!.env.example
+
+# Fitxers de distribució de PyInstaller
+/dist/
+/build/
+*.spec

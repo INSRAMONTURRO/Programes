@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 # ----------------------------------------------------------------------
-# BaixaFaltes50
+# BaixaFaltes51
 #
 # Script per descarregar, processar i analitzar les faltes d'assistència
 # de l'alumnat, generant informes i resums per al seguiment.
 #
 # Autor: Josem
-# Versió: 50
-# Data: 1 de febrer de 2026
+# Versió: 51
+# Data: 10 de febrer de 2026
 # Llicència: Creative Commons BY-NC-SA 4.0
 # ----------------------------------------------------------------------
+from dotenv import load_dotenv
+load_dotenv()
+
 print("⏳ [1/5] Iniciant script...")
 
 import tkinter as tk
@@ -27,7 +30,6 @@ import numpy as np
 import traceback
 import webbrowser
 from tkinter import font
-import base64
 
 # Llibreries correu
 import smtplib
@@ -56,7 +58,7 @@ class AplicacioFaltes:
     def __init__(self, root):
         print("   -> Iniciant script...")
         self.root = root
-        self.root.title("Gestor Faltes (V50)")
+        self.root.title("Gestor Faltes (V51)")
         self.root.geometry("1100x900")
         
         self.driver = None
@@ -64,14 +66,15 @@ class AplicacioFaltes:
         self.var_versio_chrome = tk.StringVar(value="144") 
         self.carpeta_temp = os.path.join(os.getcwd(), "temp_faltes")
         
-        self.var_email_origen = tk.StringVar(value="cap.estudis@iesmalgrat.cat") 
-        self.var_password = tk.StringVar(value="d3RvYSBsa2xqIGNxbnAgbWlvdQ==")      
+        # Carrega les credencials des de les variables d'entorn (.env)
+        self.var_email_origen = tk.StringVar(value=os.getenv("EMAIL_ORIGEN", ""))
+        self.var_password = tk.StringVar(value=os.getenv("EMAIL_PASSWORD", ""))      
         
         data_avui = datetime.now().strftime("%d-%m-%Y")
         self.var_data_inici = tk.StringVar(value="09-12-2025")
         self.var_data_fi = tk.StringVar(value=data_avui)
 
-        tk.Label(root, text="Gestor de Faltes (V50)", font=("Arial", 16, "bold")).pack(pady=10)
+        tk.Label(root, text="Gestor de Faltes (V51)", font=("Arial", 16, "bold")).pack(pady=10)
 
         frame_email = tk.LabelFrame(root, text="Configuració Enviament", padx=10, pady=5, fg="blue")
         frame_email.pack(fill="x", padx=10, pady=5)
@@ -678,8 +681,10 @@ Cap d'Estudis"""
 
     def enviar_correu(self, destinatari, assumpte, cos, fitxers_adjunts=[]):
         remitent = self.var_email_origen.get().strip()
-        password = base64.b64decode(self.var_password.get().replace(" ", "").strip()).decode('utf-8')
-        if not remitent or not password: return
+        password = self.var_password.get().strip()
+        if not remitent or not password:
+            self.root.after(0, self.log, "⚠️ No s'han configurat les credencials d'email al fitxer .env.")
+            return
         msg = MIMEMultipart(); msg['From'] = remitent; msg['To'] = destinatari; msg['Subject'] = assumpte
         msg.attach(MIMEText(cos, 'plain'))
         for f in fitxers_adjunts:
