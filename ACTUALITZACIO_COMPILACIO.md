@@ -25,12 +25,14 @@ git commit -m "CI: Integra la instal·lació de dependències a la compilació i
 El flux de treball de GitHub Actions (`.github/workflows/build.yml`) s'activa específicament quan es puja una etiqueta (tag) que comença per `v`. Has de crear una nova etiqueta per a aquesta versió.
 
 **Abans d'executar la comanda:**
-*   **Tria el número de versió:** Decideix quin serà el següent número de versió (per exemple, `v1.0.0`, `v1.0.1`, `v2.0.0`, etc.). Si no hi ha versions anteriors, `v1.0.0` és un bon punt de partida.
-*   **Afegeix un missatge:** El missatge de l'etiqueta (`-m`) ha de descriure breument el contingut d'aquesta versió.
+
+* **Tria el número de versió:** Decideix quin serà el següent número de versió (per exemple, `v1.0.0`, `v1.0.1`, `v2.0.0`, etc.). Si no hi ha versions anteriors, `v1.0.0` és un bon punt de partida.
+* **Afegeix un missatge:** El missatge de l'etiqueta (`-m`) ha de descriure breument el contingut d'aquesta versió.
 
 ```bash
 git tag -a vX.Y.Z -m "Release vX.Y.Z: Actualització de la compilació amb gestió de dependències"
 ```
+
 *(Substitueix `vX.Y.Z` pel teu número de versió real, per exemple `v1.0.0`.)*
 
 ### 4. Pujar els Canvis i l'Etiqueta a GitHub (Push)
@@ -40,6 +42,7 @@ Finalment, aquesta comanda envia tant els teus commits com l'etiqueta que has cr
 ```bash
 git push --tags
 ```
+
 *(Aquesta comanda pujarà la branca actual al mateix temps que totes les etiquetes.)*
 
 ---
