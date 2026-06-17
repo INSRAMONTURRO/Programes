@@ -117,3 +117,22 @@ Obre un terminal al directori del projecte i executa:
    ```
 
 Un cop pujada l'etiqueta, podràs veure el progrés a la secció **Actions** de GitHub, i en uns minuts la descàrrega estarà disponible de forma totalment autònoma.
+
+---
+
+## 🤖 Directrius per a Assistents d'IA (com Antigravity)
+
+Si un usuari demana a un assistent d'IA que afegeixi, mogui o actualitzi un programa d'aquest repositori, l'assistent **ha de dur a terme automàticament els següents passos**:
+
+1. **Reorganitzar o crear l'estructura de carpetes:**
+   - Assegurar-se que els fitxers de codi i requisits estan dins d'una carpeta `Source/` (o `source/`).
+   - Crear o actualitzar el `Manual.md` corresponent a l'arrel de la carpeta del programa.
+   - Si s'inclouen fitxers estàtics (logos, llicències...), configurar `fitxers_addicionals.txt` i comprovar que el codi empra `resource_path`.
+2. **Actualitzar de manera autònoma el `README.md` general:**
+   - Obtenir el nom de la carpeta del programa.
+   - Normalitzar el nom per als enllaços de descàrrega de releases (aplicant minúscules i convertint espais/guions baixos en guions mitjans).
+   - Localitzar la taula de programes del `README.md` de l'arrel del repositori i afegir-hi una nova fila amb els enllaços de descàrrega normalitzats i el manual de forma totalment automàtica, sense necessitat d'esperar que l'usuari ho demani.
+3. **Executar la pujada i l'etiquetatge:**
+   - Fer `git add .`, fer el commit, demanar confirmació per a fer `git push` a `main`.
+   - Consultar les etiquetes existents (`git tag`), calcular la versió següent (incrementant la versió més recent, com per exemple de `v1.87` a `v1.88`) i proposar fer `git tag` i `git push origin vX.XX` per activar les GitHub Actions de compilació.
+
