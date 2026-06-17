@@ -34,6 +34,17 @@ except ImportError:
         PDF_LIBRARY_AVAILABLE = False
 
 
+def resource_path(relative_path):
+    """ Retorna la ruta absoluta al recurs, funciona per a desenvolupament i per a PyInstaller """
+    try:
+        # PyInstaller crea una carpeta temporal i guarda la ruta a _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    
+    return os.path.join(base_path, relative_path)
+
+
 def sanitize_filename(name):
     """Neteja els caràcters no vàlids per a fitxers a Windows/Linux."""
     # Caràcters prohibits: \ / : * ? " < > |
@@ -47,7 +58,7 @@ class SeparadorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Separador d'Informes d'Alumnes")
-        self.root.geometry("700x640")
+        self.root.geometry("700x840")
         self.root.configure(bg="#f8fafc")  # Slate-50 background (molt net i modern)
         self.root.minsize(650, 600)
 
@@ -95,7 +106,7 @@ class SeparadorApp:
 
         lbl_subtitle = tk.Label(
             header_frame, 
-            text="Divideix un fitxer PDF (6 pàgines per informe) en documents individuals utilitzant les dades d'un CSV.", 
+            text="Divideix un fitxer PDF (configurable en pàgines per informe) en documents individuals utilitzant les dades d'un CSV.", 
             font=self.font_small, 
             fg="#94a3b8",  # Slate-400
             bg="#1e293b"
@@ -166,6 +177,31 @@ class SeparadorApp:
             command=self.select_pdf_file
         )
         btn_pdf.pack(side="right")
+
+        # Files input: Nombre de pàgines per informe
+        row_pages = tk.Frame(card1, bg="#ffffff")
+        row_pages.pack(fill="x", padx=15, pady=(0, 15))
+        
+        lbl_pages_title = tk.Label(row_pages, text="Nombre de pàgines per informe:", font=self.font_body_bold, fg="#334155", bg="#ffffff")
+        lbl_pages_title.pack(side="left", padx=(0, 10))
+        
+        self.spin_pages = tk.Spinbox(
+            row_pages, 
+            from_=1, 
+            to=100, 
+            width=5, 
+            font=self.font_body, 
+            relief="flat", 
+            bd=1, 
+            bg="#f1f5f9", 
+            fg="#0f172a",
+            justify="center",
+            command=self.on_pages_changed
+        )
+        self.spin_pages.bind("<KeyRelease>", lambda e: self.on_pages_changed())
+        self.spin_pages.delete(0, "end")
+        self.spin_pages.insert(0, "6")
+        self.spin_pages.pack(side="left")
 
         # --- SECCIÓ 2: RESUM I COINCIDÈNCIES (CARD) ---
         lbl_sec2 = tk.Label(
@@ -299,7 +335,7 @@ class SeparadorApp:
         footer_frame.pack_propagate(False)
 
         # Dades d'autoria del fitxer AUTORIA_LLICENCIA
-        autor = "Josep M."
+        autor = "Josep M Sardà"
         llicencia_text = "CC BY-NC-SA 4.0"
         url_llicencia = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
         info_text = f"Autor: {autor}  |  Llicència: {llicencia_text}"
@@ -363,8 +399,7 @@ class SeparadorApp:
 
     def load_license_badge(self, parent, url_llicencia):
         """Intenta carregar la imatge by-nc-sa.png i posar-la a la dreta del peu."""
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "by-nc-sa.png")
+        image_path = resource_path("by-nc-sa.png")
         
         if os.path.exists(image_path):
             try:
@@ -405,14 +440,10 @@ class SeparadorApp:
         if error:
             messagebox.showerror("Error de format CSV", error)
             self.students = []
-            self.lbl_summary_csv.config(text="Llistat d'alumnes: Error en llegir el fitxer.", fg="#ef4444")
         else:
             self.students = students
-            self.lbl_summary_csv.config(
-                text=f"Llistat d'alumnes: {len(students)} alumnes detectats correctament.", 
-                fg="#059669"
-            )
 
+        self.update_summary_labels()
         self.update_default_output_dir()
         self.check_files_and_validate()
 
@@ -434,16 +465,11 @@ class SeparadorApp:
         try:
             reader = PdfReader(file_path)
             self.pdf_pages = len(reader.pages)
-            reports_count = self.pdf_pages // 6
-            self.lbl_summary_pdf.config(
-                text=f"Fitxer PDF: {self.pdf_pages} pàgines ({reports_count} informes de 6 pàgines).", 
-                fg="#059669"
-            )
         except Exception as e:
             messagebox.showerror("Error de lectura PDF", f"No s'ha pogut analitzar el PDF:\n{str(e)}")
             self.pdf_pages = 0
-            self.lbl_summary_pdf.config(text="Fitxer PDF: Error en analitzar el fitxer.", fg="#ef4444")
 
+        self.update_summary_labels()
         self.update_default_output_dir()
         self.check_files_and_validate()
 
@@ -477,6 +503,58 @@ class SeparadorApp:
         entry_widget.insert(0, text)
         entry_widget.config(state="readonly")
 
+    def get_pages_per_report(self):
+        """Obté el nombre de pàgines per informe del Spinbox de forma segura."""
+        try:
+            val = int(self.spin_pages.get())
+            if val < 1:
+                return 1
+            return val
+        except ValueError:
+            return 6  # Valor per defecte si no és un número vàlid
+
+    def on_pages_changed(self):
+        """S'executa quan l'usuari canvia el nombre de pàgines per informe."""
+        self.update_summary_labels()
+        self.check_files_and_validate()
+
+    def update_summary_labels(self):
+        """Actualitza els textos resum basant-se en els fitxers i el nombre de pàgines."""
+        # 1. Resum CSV
+        if self.csv_path:
+            if not self.students:
+                self.lbl_summary_csv.config(text="Llistat d'alumnes: Error en llegir el fitxer o no conté alumnes.", fg="#ef4444")
+            else:
+                self.lbl_summary_csv.config(
+                    text=f"Llistat d'alumnes: {len(self.students)} alumnes detectats correctament.", 
+                    fg="#059669"
+                )
+        else:
+            self.lbl_summary_csv.config(
+                text="Llistat d'alumnes: Pendent de carregar el fitxer CSV.", 
+                fg="#64748b"
+            )
+
+        # 2. Resum PDF
+        if self.pdf_path:
+            if self.pdf_pages > 0:
+                pages_per_report = self.get_pages_per_report()
+                reports_count = self.pdf_pages // pages_per_report
+                self.lbl_summary_pdf.config(
+                    text=f"Fitxer PDF: {self.pdf_pages} pàgines ({reports_count} informes de {pages_per_report} pàgines).", 
+                    fg="#059669"
+                )
+            else:
+                self.lbl_summary_pdf.config(
+                    text="Fitxer PDF: Error en analitzar el fitxer o està buit.", 
+                    fg="#ef4444"
+                )
+        else:
+            self.lbl_summary_pdf.config(
+                text="Fitxer PDF: Pendent de carregar el fitxer PDF.", 
+                fg="#64748b"
+            )
+
     def check_files_and_validate(self):
         """Comprova si tenim tota la informació i valida les coincidències."""
         if not self.csv_path or not self.pdf_path:
@@ -489,7 +567,8 @@ class SeparadorApp:
 
         # Ambdós fitxers estan carregats
         num_students = len(self.students)
-        total_reports = self.pdf_pages // 6
+        pages_per_report = self.get_pages_per_report()
+        total_reports = self.pdf_pages // pages_per_report
 
         if num_students == 0:
             self.lbl_summary_match.config(text="Estat: El fitxer CSV no conté alumnes vàlids.", fg="#ef4444")
@@ -504,7 +583,7 @@ class SeparadorApp:
         # Validem si coincideix exactament
         if num_students == total_reports:
             self.lbl_summary_match.config(
-                text=f"Estat d'encaix perfecte: {num_students} alumnes i {total_reports} informes de 6 pàgines.",
+                text=f"Estat d'encaix perfecte: {num_students} alumnes i {total_reports} informes de {pages_per_report} pàgines.",
                 fg="#059669"  # Emerald-600
             )
         else:
@@ -618,8 +697,9 @@ class SeparadorApp:
         self.progress_var.set(0)
         self.lbl_status.config(text="Iniciant la separació del fitxer PDF...", fg="#0f172a")
 
+        pages_per_report = self.get_pages_per_report()
         # Llança el procés en un fil independent per evitar congelar la GUI
-        t = threading.Thread(target=self.run_split)
+        t = threading.Thread(target=self.run_split, args=(pages_per_report,))
         t.daemon = True
         t.start()
 
@@ -631,7 +711,7 @@ class SeparadorApp:
                 self.progress_var.set(progress_val)
         self.root.after(0, _update)
 
-    def run_split(self):
+    def run_split(self, pages_per_report):
         """Lògica principal de divisió de fitxers PDF executada al fil de fons."""
         csv_path = self.csv_path
         pdf_path = self.pdf_path
@@ -647,7 +727,7 @@ class SeparadorApp:
             total_pages = len(reader.pages)
             
             num_students = len(students)
-            total_reports = total_pages // 6
+            total_reports = total_pages // pages_per_report
             
             # Calculem quantes files processarem exactament (el menor dels dos valors)
             to_process = min(num_students, total_reports)
@@ -673,9 +753,9 @@ class SeparadorApp:
                 filename = f"AD_{safe_nom}_{safe_cognom}_{safe_ralc}.pdf"
                 dest_file_path = os.path.join(out_dir, filename)
                 
-                # Pàgines d'inici i final (0-indexed, 6 pàgines per informe)
-                start_page = i * 6
-                end_page = start_page + 6
+                # Pàgines d'inici i final (0-indexed, N pàgines per informe)
+                start_page = i * pages_per_report
+                end_page = start_page + pages_per_report
                 
                 # Escriptura del PDF d'aquest alumne
                 writer = PdfWriter()
