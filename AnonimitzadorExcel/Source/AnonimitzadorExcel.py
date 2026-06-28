@@ -7,11 +7,12 @@
 # mapeig consistent a un fitxer JSON.
 #
 # Autor: Josepm
-# Versió: 2.1 (GUI Actualitzada - Multi-full i Prefixos)
-# Data: 21 de juny de 2026
+# Versió: 2.2 (GUI Actualitzada - Multi-full, Prefixos i Normalització de Noms)
+# Data: 28 de juny de 2026
 # Llicència: Creative Commons BY-NC-SA 4.0
 #
 # Canvis:
+# - v2.2: Normalització de noms (accents, majúscules/minúscules, espais consecutius) per evitar duplicats.
 # - v2.1: S'ha estès el processament a TOTS els fulls del llibre Excel.
 #         S'ha afegit un nou camp per configurar prefixos individuals per a
 #         cada columna (ex: Professor per a la col. B, Alumne per a la C).
@@ -32,6 +33,8 @@ import threading
 import queue
 import webbrowser
 from datetime import datetime
+import re
+import unicodedata
 
 # --- CONFIGURACIÓ ---
 FITXER_MAPPEIG = "mapeig_anonim.json"
@@ -68,7 +71,7 @@ def create_modern_button(parent, text, command, bg="#2563eb", fg="white", active
 class AnonimitzadorExcelApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Gestor d'Anonimització iEduca (v2.1)")
+        self.root.title("Gestor d'Anonimització iEduca (v2.2)")
         self.root.geometry("750x800")
         self.root.minsize(600, 700)
         self.root.configure(bg="#f1f5f9")
@@ -417,13 +420,30 @@ class AnonimitzadorExcelApp:
         if not nom_net or nom_net == "-" or len(nom_net) < 3: 
             return nom_real
         
-        if nom_net not in self.mapeig:
+        # Normalització per evitar duplicats per diferències de majúscules/minúscules, accents o espais consecutius
+        def normalitzar(s):
+            s = str(s).lower().strip()
+            s = re.sub(r'\s+', ' ', s)
+            return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+            
+        nom_norm = normalitzar(nom_net)
+        
+        # Cerquem si ja hi ha algun nom real al mapeig que equivalgui al nom normalitzat
+        pseudonim = None
+        for real_name, pseudo in self.mapeig.items():
+            if normalitzar(real_name) == nom_norm:
+                pseudonim = pseudo
+                break
+                
+        if not pseudonim:
             # Comptar quants pseudònims amb aquest prefix hi ha registrats actualment
             count = sum(1 for pseudo in self.mapeig.values() if str(pseudo).startswith(prefix))
             num = count + 1
-            self.mapeig[nom_net] = f"{prefix} {num:03d}"
+            pseudonim = f"{prefix} {num:03d}"
+            self.mapeig[nom_net] = pseudonim
             self.guardar_mapeig()
-        return self.mapeig[nom_net]
+            
+        return pseudonim
 
     def obtenir_nom_real(self, pseudonim):
         pseudo_net = str(pseudonim).strip()
